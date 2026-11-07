@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glance: Google Calendar &amp; Google Tasks for Mac</title>
+<meta name="description" content="Glance brings Google Calendar and Google Tasks to your Mac: a native app with Day, Week, Month and Schedule views, every account together, and real macOS widgets. Free beta.">
+<meta property="og:title" content="Glance: Google Calendar & Google Tasks for Mac">
+<meta property="og:description" content="A native Mac app and desktop widgets for Google Calendar and Google Tasks. Every account, one window. Free beta.">
+<meta property="og:image" content="https://kaizarraja.github.io/glance/assets/brand/social.png">
+<meta property="og:url" content="https://kaizarraja.github.io/glance/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/brand/favicon-64.png">
+<link rel="apple-touch-icon" href="assets/brand/icon-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07071a;
+  --bg-2: #0d0c26;
+  --panel: rgba(255,255,255,0.045);
+  --panel-2: rgba(255,255,255,0.07);
+  --line: rgba(255,255,255,0.09);
+  --line-2: rgba(255,255,255,0.16);
+  --text: #f3f2ff;
+  --muted: #a6a3c7;
+  --dim: #6f6c93;
+  --violet: #8f62ff;
+  --blue: #6b85ff;
+  --coral: #ff6685;
+  --peach: #ffa35e;
+  --cream: #ffe6c7;
+  --green: #3ddc97;
+  --grad: linear-gradient(100deg, #8f9dff 0%, #b88bff 30%, #ff7f9c 62%, #ffb36b 100%);
+  --radius: 22px;
+  --shadow: 0 40px 120px -30px rgba(0,0,0,.75), 0 10px 40px -10px rgba(40,20,120,.45);
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.6 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+.serif { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; font-style: italic; letter-spacing: -0.01em; }
+.grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.wrap { width: min(1200px, calc(100% - 32px)); margin: 0 auto; }
+section { position: relative; }
+
+/* ---------- Ambient background ---------- */
+.aurora { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: drift 26s ease-in-out infinite alternate; }
+.aurora i:nth-child(1) { width: 52vw; height: 52vw; left: -12vw; top: -18vw; background: radial-gradient(circle, #5b46ff 0%, transparent 65%); }
+.aurora i:nth-child(2) { width: 46vw; height: 46vw; right: -14vw; top: 4vw; background: radial-gradient(circle, #ff4f86 0%, transparent 65%); animation-delay: -8s; opacity: .38; }
+.aurora i:nth-child(3) { width: 40vw; height: 40vw; left: 30vw; top: 60vh; background: radial-gradient(circle, #ff9a52 0%, transparent 65%); animation-delay: -16s; opacity: .22; }
+@keyframes drift { 0% { transform: translate(0,0) scale(1); } 50% { transform: translate(4vw, 3vw) scale(1.08); } 100% { transform: translate(-3vw, 5vw) scale(.95); } }
+.grain { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .06; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+/* ---------- Nav ---------- */
+nav.top { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+  background: rgba(7,7,26,.55); border-bottom: 1px solid var(--line); }
+nav.top .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+.brand img { width: 30px; height: 30px; border-radius: 8px; }
+.brand .beta { font-size: 11px; font-weight: 600; color: var(--peach); border: 1px solid rgba(255,163,94,.35); padding: 1px 7px; border-radius: 99px; letter-spacing: .02em; }
+nav.top .links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; color: var(--muted); }
+nav.top .links a:hover { color: var(--text); }
+.btn { display: inline-flex; align-items: center; gap: 9px; border-radius: 999px; font-weight: 600; font-size: 15px; padding: 12px 20px; border: 1px solid transparent; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, background .2s; white-space: nowrap; font-family: inherit; }
+.btn:hover { transform: translateY(-1px); }
+.btn.primary { color: #160a2a; background: linear-gradient(100deg, #fff 0%, #ffe9d4 100%); box-shadow: 0 10px 40px -8px rgba(255,140,120,.55), inset 0 -2px 0 rgba(0,0,0,.08); }
+.btn.ghost { color: var(--text); background: var(--panel); border-color: var(--line-2); }
+.btn.small { padding: 8px 14px; font-size: 13.5px; }
+.btn svg { width: 18px; height: 18px; }
+
+/* ---------- Hero ---------- */
+.hero { padding: 80px 0 40px; text-align: center; }
+.pill { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 99px; background: var(--panel); border: 1px solid var(--line-2); font-size: 13.5px; color: var(--muted); }
+.pill b { color: #160a2a; background: var(--grad); border-radius: 99px; padding: 2px 10px; font-weight: 700; font-size: 12px; }
+.hero h1 { font-size: clamp(44px, 7.4vw, 96px); line-height: .98; letter-spacing: -0.045em; margin: 26px auto 22px; max-width: 18ch; font-weight: 800; }
+.hero h1 .serif { font-size: 1.08em; letter-spacing: -0.02em; }
+.hero p.lede { font-size: clamp(17px, 2vw, 21px); color: var(--muted); max-width: 640px; margin: 0 auto 34px; }
+.cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.meta-row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 22px; color: var(--dim); font-size: 13.5px; }
+.meta-row span { display: inline-flex; align-items: center; gap: 7px; }
+.meta-row span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+
+/* Animated logo */
+.lens { width: 92px; height: 92px; position: relative; margin: 0 auto 6px; }
+.lens .c { position: absolute; width: 58%; height: 58%; border-radius: 50%; }
+.lens .a { left: 6%; bottom: 6%; background: linear-gradient(45deg, #6b85ff, #9a5cff); animation: lensA 1.4s cubic-bezier(.2,.8,.2,1) both; }
+.lens .b { right: 6%; top: 6%; background: linear-gradient(45deg, #ff6685, #ffa35e); animation: lensB 1.4s cubic-bezier(.2,.8,.2,1) both; }
+.lens .glow { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 50% 50%, rgba(255,230,200,.65), transparent 55%); filter: blur(12px); animation: glow 4s ease-in-out 1.2s infinite; opacity: 0; }
+.lens svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: fadeIn .6s ease 1.05s both; }
+@keyframes lensA { from { transform: translate(-60%, 60%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes lensB { from { transform: translate(60%, -60%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes glow { 0%,100% { opacity: .25; } 50% { opacity: .75; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Hero stage */
+.stage { position: relative; margin: 64px auto 0; width: min(1180px, 100%); perspective: 2200px; }
+.stage .window { position: relative; transform: rotateX(14deg) scale(.96); transform-origin: 50% 0; transition: transform .25s ease-out; border-radius: 16px; overflow: hidden;
+  box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.12); background: #fff; }
+.stage .window img { width: 100%; height: auto; }
+.stage .float { position: absolute; border-radius: 22px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.08); transition: transform .25s ease-out; will-change: transform; }
+.stage .f1 { width: 23%; left: -6%; top: 26%; }
+.stage .f2 { width: 30%; right: -7%; top: 60%; }
+.stage .f3 { width: 14%; left: 38%; bottom: -9%; }
+.stage .shine { position: absolute; inset: -40% -10% auto; height: 80%; background: radial-gradient(ellipse at 50% 100%, rgba(160,120,255,.35), transparent 60%); z-index: -1; filter: blur(30px); }
+.reflect { height: 140px; margin-top: -60px; background: radial-gradient(ellipse at 50% 0%, rgba(143,98,255,.35), transparent 70%); filter: blur(20px); }
+
+/* ---------- Marquee ---------- */
+.marquee { border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.marquee .track { display: flex; gap: 46px; width: max-content; animation: scroll 42s linear infinite; }
+.marquee span { display: inline-flex; align-items: center; gap: 12px; color: var(--muted); font-size: 15px; white-space: nowrap; }
+.marquee span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--grad); }
+@keyframes scroll { to { transform: translateX(-50%); } }
+
+/* ---------- Section headings ---------- */
+.sec { padding: 130px 0 40px; }
+.eyebrow { display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--peach); margin-bottom: 16px; }
+h2 { font-size: clamp(36px, 5.2vw, 64px); line-height: 1.02; letter-spacing: -0.04em; margin: 0 0 18px; font-weight: 800; }
+h2 .serif { font-size: 1.1em; }
+.sub { color: var(--muted); font-size: 19px; max-width: 640px; }
+.center { text-align: center; }
+.center .sub { margin: 0 auto; }
+
+/* ---------- Stats ---------- */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-top: 70px; }
+.stats div { background: var(--bg); padding: 30px 26px; }
+.stats b { display: block; font-size: 44px; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
+.stats span { color: var(--muted); font-size: 14.5px; }
+
+/* ---------- Showcase ---------- */
+.showcase { margin-top: 50px; }
+.tabs { display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); width: max-content; max-width: 100%; margin: 0 auto 28px; overflow-x: auto; scrollbar-width: none; }
+.tabs button { position: relative; border: 0; background: none; color: var(--muted); font: 600 14px Inter, sans-serif; padding: 9px 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; overflow: hidden; }
+.tabs button.on { color: #160a2a; background: #fff; }
+.tabs button .bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--grad); }
+.tabs button.on .bar { animation: fill 6s linear forwards; }
+.showcase.paused .tabs button.on .bar { animation-play-state: paused; }
+@keyframes fill { to { width: 100%; } }
+.screen { position: relative; border-radius: 18px; overflow: hidden; box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.12); background: #111; aspect-ratio: 2400 / 1387; }
+.screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; transform: scale(1.015); transition: opacity .6s ease, transform 1.2s ease; }
+.screen img.on { opacity: 1; transform: none; }
+.caption-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 22px; flex-wrap: wrap; }
+.caption { font-size: 17px; color: var(--muted); max-width: 760px; min-height: 2.8em; }
+.caption b { color: var(--text); }
+.toggle { display: inline-flex; padding: 4px; border-radius: 99px; background: var(--panel); border: 1px solid var(--line); }
+.toggle button { border: 0; background: none; color: var(--muted); font: 600 13px Inter, sans-serif; padding: 7px 14px; border-radius: 99px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.toggle button.on { background: var(--panel-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+
+/* ---------- Bento ---------- */
+.bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; margin-top: 60px; }
+.card { position: relative; grid-column: span 2; border-radius: var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)); border: 1px solid var(--line); padding: 26px; overflow: hidden; min-height: 330px; display: flex; flex-direction: column; }
+.card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 0%), rgba(255,255,255,.07), transparent 40%); opacity: 0; transition: opacity .3s; }
+.card:hover::after { opacity: 1; }
+.card.wide { grid-column: span 4; }
+.card.half { grid-column: span 3; }
+.card h3 { margin: 0 0 6px; font-size: 21px; letter-spacing: -0.02em; }
+.card p { margin: 0; color: var(--muted); font-size: 15px; }
+.card .viz { margin-top: auto; padding-top: 24px; }
+.tag { display: inline-flex; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
+
+/* drag demo */
+.mini-week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; height: 170px; position: relative; }
+.mini-week div { border-radius: 10px; background: rgba(255,255,255,.035); border: 1px dashed rgba(255,255,255,.07); position: relative; }
+.mini-week small { position: absolute; top: 6px; left: 8px; font-size: 11px; color: var(--dim); font-weight: 600; }
+.chip { position: absolute; border-radius: 8px; padding: 6px 9px; font-size: 12px; font-weight: 600; color: #fff; line-height: 1.25; box-shadow: 0 8px 20px -6px rgba(0,0,0,.5); }
+.chip small { position: static !important; display: block; color: rgba(255,255,255,.85) !important; font-weight: 500; font-size: 10.5px; }
+.chip.blue { background: #039be5; } .chip.green { background: #33b679; } .chip.coral { background: #e67c73; } .chip.lav { background: #7986cb; }
+.chip.mover { width: calc(20% - 8px); left: 2px; top: 36px; animation: mover 7s cubic-bezier(.6,0,.2,1) infinite; z-index: 2; }
+@keyframes mover {
+  0%, 12% { transform: translate(0,0) rotate(0); box-shadow: 0 8px 20px -6px rgba(0,0,0,.5); }
+  18% { transform: translate(0,-4px) rotate(-2deg) scale(1.05); box-shadow: 0 20px 40px -10px rgba(0,0,0,.7); }
+  46% { transform: translate(calc(200% + 24px), 56px) rotate(2deg) scale(1.05); }
+  52%, 82% { transform: translate(calc(200% + 24px), 56px) rotate(0) scale(1); box-shadow: 0 8px 20px -6px rgba(0,0,0,.5); }
+  100% { transform: translate(0,0); }
+}
+.cursor { position: absolute; width: 18px; height: 18px; z-index: 3; animation: cursor 7s cubic-bezier(.6,0,.2,1) infinite; left: 16%; top: 62px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+@keyframes cursor { 0%, 12% { transform: translate(0,0); } 46%, 82% { transform: translate(calc(var(--w, 260px) * .4), 56px); } 100% { transform: translate(0,0); } }
+
+/* quick add demo */
+.qa { border-radius: 16px; background: rgba(240,240,245,.96); color: #222; padding: 16px 18px; box-shadow: 0 20px 50px -15px rgba(0,0,0,.6); }
+.qa .row1 { display: flex; align-items: center; gap: 12px; font-size: 19px; min-height: 28px; }
+.qa .ring { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #b5b5bd; flex: none; }
+.qa .typed::after { content: ""; display: inline-block; width: 2px; height: 1.1em; background: #2f6bff; vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.qa .row2 { display: flex; gap: 8px; margin-top: 12px; padding-left: 32px; }
+.qa .c2 { font-size: 13px; font-weight: 600; padding: 5px 11px; border-radius: 99px; background: #e2e2e8; color: #444; transition: all .35s ease; }
+.qa .c2.date { background: #2f6bff; color: #fff; transform: scale(.6); opacity: 0; }
+.qa .c2.date.show { transform: none; opacity: 1; }
+.kbd-hint { margin-top: 12px; font-size: 12.5px; color: var(--dim); }
+kbd { font: 600 12px var(--mono); padding: 2px 7px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line-2); border-bottom-width: 2px; color: var(--text); }
+
+/* accounts demo */
+.accts { display: flex; flex-direction: column; gap: 10px; }
+.acct { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid var(--line); }
+.acct .av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: #fff; }
+.acct small { display: block; color: var(--dim); font-size: 12px; }
+.dots { margin-left: auto; display: flex; gap: 5px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; }
+.merge { text-align: center; font-size: 12px; color: var(--dim); margin: 2px 0; letter-spacing: .1em; }
+
+/* shortcuts */
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.key { aspect-ratio: 1; border-radius: 14px; background: linear-gradient(180deg, #23214a, #17163a); border: 1px solid var(--line-2); border-bottom: 4px solid #0e0d28; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 700 22px var(--mono); transition: all .25s; }
+.key small { font: 500 11px Inter, sans-serif; color: var(--dim); }
+.key.hit { transform: translateY(3px); border-bottom-width: 1px; background: linear-gradient(180deg, #4b3aa8, #2c2270); box-shadow: 0 0 30px rgba(143,98,255,.5); }
+
+/* scope dialog */
+.dialog { border-radius: 16px; background: rgba(250,250,252,.97); color: #1b1b22; padding: 20px; max-width: 320px; box-shadow: 0 25px 60px -20px rgba(0,0,0,.7); }
+.dialog h4 { margin: 0 0 12px; font-size: 15px; }
+.dialog label { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; }
+.dialog label i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #b0b0bb; }
+.dialog label.on i { border: 5px solid #2f6bff; }
+.dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.dialog .btns span { font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; background: #e7e7ee; }
+.dialog .btns span.ok { background: #2f6bff; color: #fff; }
+
+/* hot corner */
+.corner { position: relative; height: 190px; border-radius: 16px; overflow: hidden; background: radial-gradient(120% 120% at 0% 0%, #3c2c86, #1b1440 55%, #2a1230); border: 1px solid var(--line); }
+.corner .menu { position: absolute; top: 0; left: 0; right: 0; height: 18px; background: rgba(255,255,255,.12); }
+.corner .ptr { position: absolute; width: 16px; animation: toCorner 5s cubic-bezier(.6,0,.3,1) infinite; left: 20%; top: 40%; filter: drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+@keyframes toCorner { 0%, 10% { transform: translate(0,0); } 40%, 80% { transform: translate(calc(var(--cw, 300px) * .76), 108px); } 100% { transform: translate(0,0); } }
+.corner .pop { position: absolute; right: 18px; bottom: 18px; width: 62%; border-radius: 12px; background: rgba(240,240,245,.95); color: #333; font-size: 13px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; animation: pop 5s ease infinite; transform-origin: 100% 100%; }
+.corner .pop i { width: 13px; height: 13px; border-radius: 50%; border: 2px solid #aaa; }
+@keyframes pop { 0%, 42% { opacity: 0; transform: scale(.85); } 48%, 82% { opacity: 1; transform: none; } 90%, 100% { opacity: 0; transform: scale(.9); } }
+.corner .glowc { position: absolute; right: -40px; bottom: -40px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,163,94,.55), transparent 70%); animation: pop 5s ease infinite; }
+
+/* crops of screenshots */
+.crop { border-radius: 14px; overflow: hidden; box-shadow: 0 20px 50px -18px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.1); background-repeat: no-repeat; background-color: #fff; }
+
+/* ---------- Widgets desk ---------- */
+.desk { position: relative; margin-top: 56px; border-radius: 28px; overflow: hidden; padding: 70px 40px 56px; min-height: 640px;
+  background: radial-gradient(60% 70% at 15% 20%, #5d3df0 0%, transparent 60%), radial-gradient(50% 60% at 90% 30%, #ff5d8a 0%, transparent 60%), radial-gradient(60% 60% at 60% 100%, #ff9e5a 0%, transparent 60%), linear-gradient(160deg, #241a6b, #3a1748 60%, #4a1d2e);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.1); }
+.desk .menubar { position: absolute; top: 0; left: 0; right: 0; height: 30px; background: rgba(20,10,40,.28); backdrop-filter: blur(20px); display: flex; align-items: center; gap: 18px; padding: 0 16px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.92); }
+.desk .menubar .r { margin-left: auto; font-weight: 500; }
+.desk-grid { display: flex; gap: 26px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+.desk-grid img { border-radius: 22px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.6); transition: transform .4s cubic-bezier(.2,.8,.2,1), opacity .4s; }
+.desk-grid img:hover { transform: translateY(-6px) scale(1.01); }
+.desk-grid .col { display: flex; flex-direction: column; gap: 26px; }
+.sizes { display: flex; gap: 8px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+.sizes button { border: 1px solid var(--line-2); background: var(--panel); color: var(--muted); font: 600 13.5px Inter, sans-serif; padding: 8px 16px; border-radius: 99px; cursor: pointer; }
+.sizes button.on { background: #fff; color: #160a2a; border-color: #fff; }
+.size-stage { display: none; justify-content: center; gap: 26px; flex-wrap: wrap; align-items: flex-start; }
+.size-stage.on { display: flex; animation: rise .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Compare ---------- */
+.compare { margin-top: 56px; border-radius: var(--radius); border: 1px solid var(--line); overflow: hidden; }
+.compare table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.compare th, .compare td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--line); }
+.compare th { font-size: 13px; color: var(--muted); font-weight: 600; background: rgba(255,255,255,.03); }
+.compare th.us, .compare td.us { background: rgba(143,98,255,.09); color: var(--text); font-weight: 600; }
+.compare tr:last-child td { border-bottom: 0; }
+.yes { color: var(--green); font-weight: 700; }
+.no { color: var(--dim); }
+.part { color: var(--peach); }
+
+/* ---------- Install ---------- */
+.install { display: grid; grid-template-columns: 1.05fr 1fr; gap: 28px; margin-top: 56px; align-items: start; }
+.term { border-radius: 18px; overflow: hidden; background: #0f0e1f; border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+.term .bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: rgba(255,255,255,.05); border-bottom: 1px solid var(--line); }
+.term .bar i { width: 12px; height: 12px; border-radius: 50%; }
+.term .bar span { margin: 0 auto; font-size: 12.5px; color: var(--dim); transform: translateX(-24px); }
+.term pre { margin: 0; padding: 22px 22px 26px; font: 14px/1.75 var(--mono); color: #d9d6ff; min-height: 260px; white-space: pre-wrap; word-break: break-all; }
+.term .p { color: #7ee0b3; }
+.term .o { color: #8c89b3; }
+.term .ok { color: #ffc58f; }
+.copy { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 8px 8px 8px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line-2); font: 13.5px var(--mono); color: #d9d6ff; }
+.copy code { overflow-x: auto; white-space: nowrap; flex: 1; scrollbar-width: none; }
+.copy button { flex: none; }
+.steps { display: flex; flex-direction: column; gap: 14px; }
+.step { display: grid; grid-template-columns: 44px 1fr; gap: 16px; padding: 20px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); }
+.step .n { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-weight: 800; font-size: 18px; color: #160a2a; background: var(--grad); }
+.step h4 { margin: 2px 0 4px; font-size: 17px; letter-spacing: -0.01em; }
+.step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+.step .ill { margin-top: 14px; }
+.gwarn { border-radius: 12px; background: #fff; color: #202124; padding: 14px 16px; font-size: 13px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.5); }
+.gwarn b { display: block; font-size: 15px; margin-bottom: 4px; }
+.gwarn .lnk { color: #1a73e8; font-weight: 600; }
+.gwarn .arrow { color: #8f62ff; font-weight: 700; }
+.wmenu { display: inline-flex; flex-direction: column; border-radius: 10px; background: rgba(240,240,245,.96); color: #222; font-size: 13px; padding: 5px; min-width: 200px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.5); }
+.wmenu span { padding: 5px 10px; border-radius: 6px; }
+.wmenu span.on { background: #2f6bff; color: #fff; }
+details.manual { margin-top: 18px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); padding: 16px 20px; }
+details.manual summary { cursor: pointer; font-weight: 600; }
+details.manual ol { color: var(--muted); font-size: 14.5px; padding-left: 20px; margin: 12px 0 2px; }
+details.manual li { margin: 6px 0; }
+
+/* ---------- Privacy ---------- */
+.privacy { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; margin-top: 30px; }
+.flow { display: flex; align-items: center; justify-content: center; gap: 0; padding: 40px 10px; }
+.node { width: 130px; height: 130px; border-radius: 34px; display: grid; place-items: center; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); background: var(--panel); border: 1px solid var(--line-2); position: relative; }
+.node img { width: 64px; height: 64px; border-radius: 15px; margin: 0 auto 6px; }
+.node .gdot { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; }
+.node .gdot i { width: 14px; height: 14px; border-radius: 50%; }
+.wire { width: 120px; height: 2px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 8px, transparent 8px 14px); position: relative; overflow: visible; }
+.wire::after { content: ""; position: absolute; top: -4px; left: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--peach); box-shadow: 0 0 14px var(--peach); animation: packet 2.4s linear infinite; }
+@keyframes packet { from { left: 0; } to { left: calc(100% - 10px); } }
+.noserver { margin-top: 14px; text-align: center; color: var(--dim); font-size: 13px; }
+.noserver s { color: var(--muted); }
+.bullets { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 14px; }
+.bullets li { display: flex; gap: 12px; color: var(--muted); }
+.bullets li::before { content: "✓"; flex: none; width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #0b2a1d; background: var(--green); }
+.bullets b { color: var(--text); }
+
+/* ---------- FAQ ---------- */
+.faq { max-width: 820px; margin: 50px auto 0; }
+.faq details { border-bottom: 1px solid var(--line); padding: 22px 4px; }
+.faq summary { cursor: pointer; font-size: 18px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 20px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-size: 24px; line-height: 1; color: var(--muted); transition: transform .25s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { color: var(--muted); margin: 12px 0 0; }
+.faq a, .prose a { color: #c7b6ff; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Final CTA ---------- */
+.final { margin: 140px auto 0; text-align: center; padding: 90px 24px; border-radius: 36px; position: relative; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(60% 80% at 50% 0%, rgba(143,98,255,.35), transparent 70%), radial-gradient(50% 60% at 50% 120%, rgba(255,102,133,.3), transparent 70%), var(--bg-2); }
+.final img.big { width: 120px; height: 120px; margin: 0 auto 26px; border-radius: 28px; box-shadow: 0 30px 80px -20px rgba(143,98,255,.7); animation: float 6s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-10px) rotate(-2deg); } }
+
+footer { padding: 70px 0 50px; color: var(--dim); font-size: 13.5px; }
+footer .wrap { display: flex; gap: 24px; justify-content: space-between; flex-wrap: wrap; }
+footer a:hover { color: var(--text); }
+footer .fine { max-width: 560px; }
+.flinks { display: flex; gap: 20px; flex-wrap: wrap; }
+
+/* reveal on scroll */
+.reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.8,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+
+@media (max-width: 960px) {
+  nav.top .links { display: none; }
+  .bento { grid-template-columns: 1fr; }
+  .card, .card.wide, .card.half { grid-column: auto; }
+  .install, .privacy { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stage .f1, .stage .f3 { display: none; }
+  .stage .f2 { width: 40%; right: -3%; top: 62%; }
+  .desk { padding: 56px 16px 32px; }
+  .compare { overflow-x: auto; }
+  .compare table { min-width: 640px; }
+}
+@media (max-width: 560px) {
+  nav.top .btn.ghost { display: none; }
+  .hero { padding-top: 56px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stats b { font-size: 34px; }
+  .wire { width: 50px; }
+  .node { width: 100px; height: 110px; font-size: 12px; }
+  .node img { width: 48px; height: 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/brand/icon-256.png" alt="">Glance <span class="beta">BETA</span></a>
+    <div class="links">
+      <a href="#tour">Tour</a><a href="#features">Features</a><a href="#widgets">Widgets</a><a href="#install">Install</a><a href="#faq">FAQ</a>
+    </div>
+    <a class="btn ghost small" href="https://github.com/kaizarraja/glance" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+    <a class="btn primary small" href="#install">Get Glance</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="lens" aria-hidden="true">
+      <div class="glow"></div>
+      <div class="c a"></div><div class="c b"></div>
+      <svg viewBox="0 0 100 100"><defs><clipPath id="ca"><circle cx="35" cy="65" r="29"/></clipPath><radialGradient id="lg"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ffe6c7"/></radialGradient></defs><circle cx="65" cy="35" r="29" fill="url(#lg)" clip-path="url(#ca)"/></svg>
+    </div>
+    <span class="pill"><b>Free beta</b> Native Mac app · Desktop widgets · Every Google account</span>
+    <h1>Google Calendar <span class="serif grad">&amp;&nbsp;Tasks,</span><br>finally on your Mac.</h1>
+    <p class="lede">Glance is the Google Calendar and Google Tasks app Google never made for macOS. Your work and personal accounts in one fast window, plus widgets that live right on your desktop.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="#install"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.24 1.83-3.31 1.91-3.37-1.04-1.52-2.66-1.73-3.24-1.75-1.38-.14-2.69.81-3.39.81-.7 0-1.78-.79-2.92-.77-1.5.02-2.89.87-3.66 2.22-1.56 2.71-.4 6.72 1.12 8.92.74 1.08 1.63 2.29 2.79 2.24 1.12-.04 1.54-.72 2.89-.72 1.35 0 1.73.72 2.91.7 1.2-.02 1.96-1.1 2.7-2.18.85-1.25 1.2-2.46 1.22-2.52-.03-.01-2.33-.9-2.35-3.56zM14.14 6.03c.62-.75 1.03-1.78.92-2.82-.89.04-1.96.59-2.6 1.34-.57.66-1.07 1.71-.94 2.73.99.08 2-.5 2.62-1.25z"/></svg>Download for Mac, free</a>
+      <a class="btn ghost" href="#tour">Take the tour ↓</a>
+    </div>
+    <div class="meta-row"><span>macOS 15 or later</span><span>Apple silicon &amp; Intel</span><span>No account, no server, no tracking</span></div>
+
+    <div class="stage" id="stage">
+      <div class="shine"></div>
+      <div class="window" data-depth="0.6"><img src="assets/shots/week-detail.jpg" alt="Glance week view with an event's details, guests and Join with Google Meet" width="2400" height="1387" fetchpriority="high"></div>
+      <img class="float f1" data-depth="1.6" src="assets/widgets/tasks-large.png" alt="Tasks widget" loading="eager">
+      <img class="float f2" data-depth="2.2" src="assets/widgets/calendar-agenda-medium-dark.png" alt="Calendar agenda widget" loading="eager">
+      <img class="float f3" data-depth="2.8" src="assets/widgets/calendar-agenda-small.png" alt="Small up-next widget" loading="eager">
+    </div>
+    <div class="reflect"></div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
+
+<section class="sec center" id="why">
+  <div class="wrap reveal">
+    <span class="eyebrow">Why Glance</span>
+    <h2>Your whole Google day, <span class="serif grad">at a glance.</span></h2>
+    <p class="sub">On Android, Google Calendar and Tasks are just there. On a Mac, they live in a browser tab you keep losing. Glance gives them a proper home: a real app, real widgets, and every account side by side.</p>
+    <div class="stats">
+      <div><b class="grad">4</b><span>calendar views: Day, Week, Month, Schedule</span></div>
+      <div><b class="grad">5</b><span>widget sizes, up to the tall portrait one</span></div>
+      <div><b class="grad">∞</b><span>Google accounts, work and personal together</span></div>
+      <div><b class="grad">0</b><span>servers. Your Mac talks straight to Google</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tour">
+  <div class="wrap">
+    <div class="center reveal">
+      <span class="eyebrow">The tour</span>
+      <h2>Everything you do on <span class="serif grad">calendar.google.com</span></h2>
+      <p class="sub">…without the browser. Same views, same words, same behaviour, in a native Mac window that opens instantly.</p>
+    </div>
+    <div class="showcase reveal" id="showcase">
+      <div class="tabs" id="tabs"></div>
+      <div class="screen" id="screen"></div>
+      <div class="caption-row">
+        <div class="caption" id="caption"></div>
+        <div class="toggle" id="themeToggle">
+          <button data-theme="light" class="on">☀︎ Light</button><button data-theme="dark">☾ Dark</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="features">
+  <div class="wrap">
+    <div class="center reveal">
+      <span class="eyebrow">Features</span>
+      <h2>Small touches. <span class="serif grad">Big difference.</span></h2>
+      <p class="sub">The things you reach for twenty times a day, made fast.</p>
+    </div>
+    <div class="bento">
+      <article class="card wide reveal">
+        <span class="tag">Calendar</span>
+        <h3>Drag to reschedule</h3>
+        <p>Grab an event and drop it on another time or day. Pull its bottom edge to make it longer. Repeating event? Glance asks, like Google: this event, this and following, or all.</p>
+        <div class="viz" id="dragViz">
+          <div class="mini-week">
+            <div><small>MON</small></div><div><small>TUE</small></div><div><small>WED</small></div><div><small>THU</small></div><div><small>FRI</small></div>
+            <span class="chip blue mover">Design review<small>11am – 12pm</small></span>
+            <span class="chip green" style="left:calc(20% + 3px);width:calc(20% - 8px);top:112px">Gym<small>7pm</small></span>
+            <span class="chip coral" style="left:calc(60% + 5px);width:calc(20% - 8px);top:30px">Team lunch<small>12:30pm</small></span>
+            <span class="chip lav" style="left:calc(80% + 6px);width:calc(20% - 8px);top:80px">Dentist<small>4pm</small></span>
+            <svg class="cursor" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg>
+          </div>
+        </div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Tasks</span>
+        <h3>Type it like you say it</h3>
+        <p>“Call Sam tomorrow” becomes a task due tomorrow. Quick Add pops up anywhere with a shortcut.</p>
+        <div class="viz">
+          <div class="qa"><div class="row1"><span class="ring"></span><span class="typed" id="typed"></span></div>
+            <div class="row2"><span class="c2 date" id="dateChip">✦ Tomorrow</span><span class="c2">My Tasks</span></div></div>
+          <div class="kbd-hint">Anywhere: <kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>T</kbd></div>
+        </div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Accounts</span>
+        <h3>Work and personal, together</h3>
+        <p>Add every Google account, like Google Calendar on Android. Each keeps its colours; all show in one view.</p>
+        <div class="viz accts">
+          <div class="acct"><span class="av" style="background:#7986cb">Y</span><div>you@gmail.com<small>Personal · Family · Fitness</small></div><span class="dots"><i style="background:#7986cb"></i><i style="background:#e67c73"></i><i style="background:#33b679"></i></span></div>
+          <div class="merge">＋</div>
+          <div class="acct"><span class="av" style="background:#039be5">Y</span><div>you@company.com<small>Work · Product launches</small></div><span class="dots"><i style="background:#039be5"></i><i style="background:#f4511e"></i></span></div>
+        </div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Meetings</span>
+        <h3>Join, reply, done</h3>
+        <p>One-click Google Meet. See who's coming, and answer Yes, No or Maybe without opening your inbox.</p>
+        <div class="viz"><div class="crop" style="height:200px;background-image:url(assets/shots/week-detail.jpg);background-size:430%;background-position:99.5% 21%"></div></div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Keyboard</span>
+        <h3>Google's shortcuts, built in</h3>
+        <p>The keys you already know from Google Calendar work here too.</p>
+        <div class="viz"><div class="keys" id="keys">
+          <div class="key">D<small>Day</small></div><div class="key">W<small>Week</small></div><div class="key">M<small>Month</small></div><div class="key">A<small>Schedule</small></div>
+          <div class="key">T<small>Today</small></div><div class="key">C<small>Create</small></div><div class="key">J<small>Next</small></div><div class="key">K<small>Back</small></div>
+        </div></div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Anywhere</span>
+        <h3>A hot corner for ideas</h3>
+        <p>Flick your pointer into a screen corner and Quick Add appears. Optional, and you pick the corner.</p>
+        <div class="viz"><div class="corner" id="corner"><div class="menu"></div><div class="glowc"></div>
+          <svg class="ptr" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z" fill="#fff" stroke="#000" stroke-width="1.2"/></svg>
+          <div class="pop"><i></i>Buy flowers for Mom</div></div></div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Repeating events</span>
+        <h3>Recurrence done right</h3>
+        <p>Daily, weekly on Monday, the second Tuesday of every month, every weekday, or your own rule. Changes go exactly where you mean them.</p>
+        <div class="viz"><div class="dialog"><h4>Edit recurring event</h4>
+          <label><i></i>This event</label><label class="on"><i></i>This and following events</label><label><i></i>All events</label>
+          <div class="btns"><span>Cancel</span><span class="ok">OK</span></div></div></div>
+      </article>
+      <article class="card reveal">
+        <span class="tag">Tasks</span>
+        <h3>All of Google Tasks</h3>
+        <p>Lists, subtasks, notes and due dates. Drag to reorder, move between lists, tick off and bring back. Dated tasks show up on your calendar too.</p>
+        <div class="viz"><div class="crop" style="height:210px;background-image:url(assets/shots/tasks.jpg);background-size:200%;background-position:0% 16%"></div></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="widgets">
+  <div class="wrap">
+    <div class="center reveal">
+      <span class="eyebrow">Desktop widgets</span>
+      <h2>Your day, <span class="serif grad">on your desktop.</span></h2>
+      <p class="sub">Real macOS widgets for Google Calendar and Google Tasks. Tick tasks off, page through lists and join meetings, right from the desktop. Every size, light and dark.</p>
+    </div>
+    <div class="desk reveal" id="desk">
+      <div class="menubar"><span></span><span>Finder</span><span style="font-weight:500">File</span><span style="font-weight:500">Edit</span><span style="font-weight:500">View</span><span class="r" id="clock"></span></div>
+      <div class="size-stage on" data-size="all">
+        <img src="assets/widgets/calendar-day-portrait-dark.png" alt="Today timeline widget, tall" style="width:270px">
+        <div class="col">
+          <img src="assets/widgets/calendar-agenda-large.png" alt="Agenda widget, large" style="width:300px">
+          <div style="display:flex;gap:26px"><img src="assets/widgets/calendar-agenda-small-dark.png" alt="Up next widget, small" style="width:137px"><img src="assets/widgets/tasks-small.png" alt="Tasks widget, small" style="width:137px"></div>
+        </div>
+        <div class="col">
+          <img src="assets/widgets/tasks-large-dark.png" alt="Tasks widget, large" style="width:300px">
+          <img src="assets/widgets/tasks-medium.png" alt="Tasks widget, medium" style="width:300px">
+        </div>
+      </div>
+      <div class="size-stage" data-size="small"><img data-w="small" style="width:170px"><img data-w="small-t" style="width:170px"></div>
+      <div class="size-stage" data-size="medium"><img data-w="medium" style="width:364px"><img data-w="medium-t" style="width:364px"></div>
+      <div class="size-stage" data-size="large"><img data-w="large" style="width:364px"><img data-w="day-large" style="width:364px"><img data-w="large-t" style="width:364px"></div>
+      <div class="size-stage" data-size="xl"><img data-w="xl" style="width:766px"><img data-w="xl-t" style="width:766px"></div>
+      <div class="size-stage" data-size="portrait"><img data-w="portrait" style="width:300px"><img data-w="day-portrait" style="width:300px"><img data-w="portrait-t" style="width:300px"></div>
+    </div>
+    <div class="sizes" id="sizes">
+      <button class="on" data-size="all">Desktop</button><button data-size="small">Small</button><button data-size="medium">Medium</button><button data-size="large">Large</button><button data-size="xl">Extra large</button><button data-size="portrait">Tall</button>
+      <span style="width:12px"></span>
+      <span class="toggle" id="widgetTheme"><button data-theme="light" class="on">☀︎</button><button data-theme="dark">☾</button></span>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="compare">
+  <div class="wrap">
+    <div class="center reveal">
+      <span class="eyebrow">Compared</span>
+      <h2>Why not just use <span class="serif grad">a browser tab?</span></h2>
+    </div>
+    <div class="compare reveal">
+      <table>
+        <tr><th></th><th class="us">Glance</th><th>Google in a browser tab</th><th>Apple Calendar + Reminders</th></tr>
+        <tr><td>Google Tasks</td><td class="us yes">✓ Full lists &amp; subtasks</td><td class="part">Inside Google Calendar</td><td class="no">✕ Not supported</td></tr>
+        <tr><td>Desktop widgets</td><td class="us yes">✓ Calendar &amp; Tasks</td><td class="no">✕</td><td class="part">Calendar only</td></tr>
+        <tr><td>Several Google accounts in one view</td><td class="us yes">✓</td><td class="no">✕ One per tab</td><td class="yes">✓</td></tr>
+        <tr><td>Join Google Meet in one click</td><td class="us yes">✓</td><td class="yes">✓</td><td class="part">Sometimes</td></tr>
+        <tr><td>RSVP, guests, Meet links, colours</td><td class="us yes">✓ Google's own</td><td class="yes">✓</td><td class="part">Partly</td></tr>
+        <tr><td>Google's keyboard shortcuts</td><td class="us yes">✓</td><td class="yes">✓</td><td class="no">✕</td></tr>
+        <tr><td>Quick add from anywhere</td><td class="us yes">✓ Shortcut &amp; hot corner</td><td class="no">✕</td><td class="part">Via Siri</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="install">
+  <div class="wrap">
+    <div class="center reveal">
+      <span class="eyebrow">Get started</span>
+      <h2>Up and running in <span class="serif grad">a minute.</span></h2>
+      <p class="sub">Glance is a free beta. Paste one line into Terminal, or download it yourself.</p>
+    </div>
+    <div class="install">
+      <div class="reveal">
+        <div class="term"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>Terminal</span></div><pre id="termText"></pre></div>
+        <div class="copy"><code id="cmd">curl -fsSL https://kaizarraja.github.io/glance/install.sh | bash</code><button class="btn primary small" id="copyBtn">Copy</button></div>
+        <details class="manual">
+          <summary>Rather download it yourself?</summary>
+          <ol>
+            <li><a href="https://github.com/kaizarraja/glance/releases/latest/download/Glance.zip">Download Glance.zip</a> and drag <b>Glance</b> into Applications.</li>
+            <li>Open it. macOS says it can't check the app, because the beta isn't signed with an Apple developer certificate yet. Click <b>Done</b>.</li>
+            <li>Open <b>System Settings → Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b> next to Glance, then confirm.</li>
+          </ol>
+        </details>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><div class="n">1</div><div><h4>Install</h4><p>The command downloads Glance from this site's GitHub releases, puts it in Applications and opens it. Nothing else is installed.</p></div></div>
+        <div class="step reveal"><div class="n">2</div><div><h4>Sign in with Google</h4><p>Glance is waiting for Google's review, so Google shows a warning first. Click <b>Advanced</b>, then <b>Go to Glance</b>, and allow access.</p>
+          <div class="ill"><div class="gwarn"><b>Google hasn't verified this app</b>The app is requesting access to sensitive info in your Google Account…<div style="margin-top:8px"><span class="lnk">Advanced</span> <span class="arrow">→</span> <span class="lnk">Go to Glance (unsafe)</span></div></div></div></div></div>
+        <div class="step reveal"><div class="n">3</div><div><h4>Add your other accounts</h4><p>Settings → Calendar → <b>Add another Google account…</b> Work, personal, side projects: they all show together.</p></div></div>
+        <div class="step reveal"><div class="n">4</div><div><h4>Put widgets on your desktop</h4><p>Right-click the desktop, choose <b>Edit Widgets</b>, search for <b>Glance</b> and drag out the sizes you like.</p>
+          <div class="ill"><div class="wmenu"><span>New Folder</span><span>Get Info</span><span>Change Wallpaper…</span><span class="on">Edit Widgets…</span></div></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="privacy">
+  <div class="wrap privacy">
+    <div class="reveal">
+      <span class="eyebrow">Privacy</span>
+      <h2>Your calendar <span class="serif grad">stays yours.</span></h2>
+      <p class="sub">There's no Glance server. The app talks directly to Google from your Mac, and keeps everything on your Mac.</p>
+      <ul class="bullets">
+        <li><span><b>No middleman.</b> Events and tasks go from Google to your Mac and nowhere else.</span></li>
+        <li><span><b>No tracking.</b> No analytics, no ads, no accounts to create.</span></li>
+        <li><span><b>Google's own sign-in.</b> Glance never sees your password. Remove access any time in your Google Account.</span></li>
+        <li><span><b>Only what it needs.</b> Calendar and Tasks, nothing else in your Google account. <a href="privacy.html">Read the privacy policy</a>.</span></li>
+      </ul>
+    </div>
+    <div class="reveal">
+      <div class="flow">
+        <div class="node"><div><div class="gdot"><i style="background:#6b85ff"></i><i style="background:#ff6685"></i><i style="background:#ffa35e"></i></div>Your Google<br>account</div></div>
+        <div class="wire"></div>
+        <div class="node"><div><img src="assets/brand/icon-256.png" alt="">Glance on<br>your Mac</div></div>
+      </div>
+      <div class="noserver">Glance servers in between: <s>none</s> 0</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="faq">
+  <div class="wrap">
+    <div class="center reveal"><span class="eyebrow">FAQ</span><h2>Good questions.</h2></div>
+    <div class="faq reveal">
+      <details><summary>Is Glance really free?</summary><p>Yes. The beta is free to download and use. If a paid version comes later, beta users will hear about it first, and the beta won't stop working without warning.</p></details>
+      <details><summary>Why does Google say the app isn't verified?</summary><p>Every app that reads Google Calendar or Tasks has to pass a review by Google. Glance has applied, and until it's approved Google shows this warning to everyone. Click <b>Advanced → Go to Glance</b> to continue. You can check or remove Glance's access at any time at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>.</p></details>
+      <details><summary>Why does my Mac ask me to approve it?</summary><p>The beta isn't signed with a paid Apple developer certificate yet, so macOS asks you to confirm the first time. The one-line installer avoids that prompt; if you downloaded the zip, use <b>System Settings → Privacy &amp; Security → Open Anyway</b>.</p></details>
+      <details><summary>Does it work with Google Workspace (work or school) accounts?</summary><p>Yes, as long as your organisation lets you use third-party apps with your Google account. If your admin blocks them, Google will say so when you sign in.</p></details>
+      <details><summary>Which Macs does it run on?</summary><p>macOS 15 Sequoia or later, on Apple silicon and Intel Macs. The tallest widget size needs the latest macOS.</p></details>
+      <details><summary>Is anything missing compared with Google?</summary><p>Year view isn't there yet. Starred tasks, repeating tasks and task due <i>times</i> aren't available to any app outside Google, so Glance can't show them.</p></details>
+      <details><summary>How do I uninstall it?</summary><p>Quit Glance, drag it from Applications to the Bin, and remove its access at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>.</p></details>
+      <details><summary>I found a bug or have an idea.</summary><p>Wonderful. <a href="https://github.com/kaizarraja/glance/issues" target="_blank" rel="noopener">Open an issue on GitHub</a>. Screenshots help a lot.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="final reveal">
+    <img class="big" src="assets/brand/icon-512.png" alt="Glance app icon">
+    <h2>Give your Google day <span class="serif grad">a home.</span></h2>
+    <p class="sub" style="margin:0 auto 32px">Free while in beta. One line to install.</p>
+    <div class="cta-row"><a class="btn primary" href="#install">Get Glance for Mac</a><a class="btn ghost" href="https://github.com/kaizarraja/glance" target="_blank" rel="noopener">★ Star on GitHub</a></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fine">
+      <div class="brand" style="margin-bottom:12px;color:var(--text)"><img src="assets/brand/icon-256.png" alt="">Glance</div>
+      Made by <a href="https://github.com/kaizarraja" style="color:var(--text)">Kaizar Raja</a>. Glance is an independent app and isn't made, endorsed or sponsored by Google. Google Calendar, Google Tasks and Google Meet are trademarks of Google LLC.
+    </div>
+    <div class="flinks"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="https://github.com/kaizarraja/glance/releases">Releases</a><a href="https://github.com/kaizarraja/glance/issues">Feedback</a></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Marquee
+  const feats = ['Day, Week, Month & Schedule', 'Drag to reschedule', 'Join Google Meet', 'RSVP Yes · No · Maybe', 'Multiple Google accounts', 'Repeating events', 'Subtasks & lists', 'Desktop widgets', 'Quick add anywhere', 'Hot corner', 'Google keyboard shortcuts', 'Dark mode', 'Search everything'];
+  const track = document.getElementById('marquee');
+  track.innerHTML = [...feats, ...feats].map(f => `<span>${f}</span>`).join('');
+
+  // Hero parallax
+  const stage = document.getElementById('stage');
+  if (!reduce && matchMedia('(pointer: fine)').matches) {
+    window.addEventListener('mousemove', e => {
+      const x = (e.clientX / innerWidth - .5), y = (e.clientY / innerHeight - .5);
+      stage.querySelectorAll('[data-depth]').forEach(el => {
+        const d = +el.dataset.depth;
+        if (el.classList.contains('window')) el.style.transform = `rotateX(${14 - y * 6}deg) rotateY(${x * 6}deg) scale(.96)`;
+        else el.style.transform = `translate(${x * d * -18}px, ${y * d * -14}px)`;
+      });
+    });
+  }
+  // Flatten the window as it scrolls into view
+  const win = stage.querySelector('.window');
+  const onScroll = () => {
+    const t = Math.min(1, Math.max(0, scrollY / 500));
+    if (!reduce) win.style.transform = `rotateX(${14 * (1 - t)}deg) scale(${.96 + .04 * t})`;
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+
+  // Reveal on scroll
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // Card spotlight
+  document.querySelectorAll('.card').forEach(c => c.addEventListener('pointermove', e => {
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', `${e.clientX - r.left}px`); c.style.setProperty('--my', `${e.clientY - r.top}px`);
+  }));
+
+  // Showcase
+  const shots = [
+    ['week', 'Week', '<b>Week view.</b> Every calendar from every account, colour-coded like Google. Click a slot to create, drag to move, pull an edge to resize.'],
+    ['week-detail', 'Event details', '<b>Event details.</b> Guests and their replies, Join with Google Meet, the agenda, and Yes / No / Maybe right there.'],
+    ['month', 'Month', '<b>Month view.</b> Events and dated tasks in one grid. Drag a chip to another day; “+3 more” opens the rest.'],
+    ['day', 'Day', '<b>Day view.</b> Your day as a timeline with the red “now” line, side by side when things overlap.'],
+    ['schedule', 'Schedule', '<b>Schedule.</b> The next two months as a list, just like Google’s Schedule view.'],
+    ['editor', 'Editor', '<b>The full editor.</b> Repeat rules, guests, Meet, location, notifications, calendar, colour and visibility.'],
+    ['today', 'Today', '<b>Today.</b> Your schedule, overdue tasks and today’s tasks on one page.'],
+    ['tasks', 'Tasks', '<b>Google Tasks.</b> Lists, subtasks, notes and dates. Drag to reorder or switch to sort by date.'],
+    ['upcoming', 'Upcoming', '<b>Upcoming.</b> Everything with a date in the days ahead, grouped by day.'],
+  ];
+  let theme = 'light', idx = 0, timer;
+  const tabs = document.getElementById('tabs'), screen = document.getElementById('screen'), caption = document.getElementById('caption'), showcase = document.getElementById('showcase');
+  shots.forEach(([key, label], i) => {
+    const b = document.createElement('button'); b.innerHTML = `${label}<span class="bar"></span>`;
+    b.onclick = () => go(i, true); tabs.appendChild(b);
+    ['light', 'dark'].forEach(t => {
+      const img = new Image(); img.alt = label + ' screenshot'; img.loading = i < 2 ? 'eager' : 'lazy'; img.decoding = 'async';
+      img.src = `assets/shots/${key}${t === 'dark' ? '-dark' : ''}.jpg`; img.dataset.k = `${i}-${t}`; screen.appendChild(img);
+    });
+  });
+  function go(i, user) {
+    idx = (i + shots.length) % shots.length;
+    [...tabs.children].forEach((b, j) => { b.classList.toggle('on', j === idx); if (j === idx) { const bar = b.querySelector('.bar'); bar.style.animation = 'none'; bar.offsetWidth; bar.style.animation = ''; } });
+    screen.querySelectorAll('img').forEach(img => img.classList.toggle('on', img.dataset.k === `${idx}-${theme}`));
+    caption.innerHTML = shots[idx][2];
+    const on = tabs.children[idx]; tabs.scrollTo({ left: on.offsetLeft - tabs.clientWidth / 2 + on.clientWidth / 2, behavior: 'smooth' });
+    clearTimeout(timer); if (!reduce) timer = setTimeout(() => go(idx + 1), 6000);
+  }
+  document.querySelectorAll('#themeToggle button').forEach(b => b.onclick = () => {
+    theme = b.dataset.theme; document.querySelectorAll('#themeToggle button').forEach(x => x.classList.toggle('on', x === b)); go(idx);
+  });
+  showcase.addEventListener('mouseenter', () => { showcase.classList.add('paused'); clearTimeout(timer); });
+  showcase.addEventListener('mouseleave', () => { showcase.classList.remove('paused'); go(idx); });
+  let sx = null;
+  screen.addEventListener('touchstart', e => sx = e.touches[0].clientX, { passive: true });
+  screen.addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) go(idx + (dx < 0 ? 1 : -1), true); sx = null; });
+  go(0);
+
+  // Quick add typing
+  const typed = document.getElementById('typed'), dateChip = document.getElementById('dateChip');
+  const phrases = ['Call Sam tomorrow', 'Pay rent on Friday', 'Book flights next week', 'Renew passport tomorrow'];
+  const labels = ['✦ Tomorrow', '✦ Friday', '✦ Next week', '✦ Tomorrow'];
+  let p = 0;
+  async function typeLoop() {
+    while (true) {
+      const text = phrases[p];
+      for (let i = 0; i <= text.length; i++) { typed.textContent = text.slice(0, i); await wait(70); }
+      dateChip.textContent = labels[p]; dateChip.classList.add('show'); await wait(2200);
+      dateChip.classList.remove('show');
+      for (let i = text.length; i >= 0; i--) { typed.textContent = text.slice(0, i); await wait(25); }
+      p = (p + 1) % phrases.length; await wait(400);
+    }
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  if (reduce) { typed.textContent = phrases[0]; dateChip.classList.add('show'); } else typeLoop();
+
+  // Keys
+  const keys = [...document.querySelectorAll('#keys .key')]; let k = 0;
+  if (!reduce) setInterval(() => { keys.forEach(x => x.classList.remove('hit')); keys[k % keys.length].classList.add('hit'); k++; }, 900);
+
+  // Sizes for animations that need pixels
+  const setW = () => {
+    document.getElementById('dragViz').style.setProperty('--w', document.getElementById('dragViz').clientWidth + 'px');
+    document.getElementById('corner').style.setProperty('--cw', document.getElementById('corner').clientWidth + 'px');
+  };
+  setW(); addEventListener('resize', setW);
+
+  // Widgets
+  const wmap = {
+    small: ['calendar-agenda-small', 'Up next'], 'small-t': ['tasks-small', 'Tasks'],
+    medium: ['calendar-agenda-medium', 'Agenda'], 'medium-t': ['tasks-medium', 'Tasks'],
+    large: ['calendar-agenda-large', 'Agenda'], 'day-large': ['calendar-day-large', 'Today'], 'large-t': ['tasks-large', 'Tasks'],
+    xl: ['calendar-agenda-xl', 'Agenda'], 'xl-t': ['tasks-xl', 'Tasks'],
+    portrait: ['calendar-agenda-portrait', 'Agenda'], 'day-portrait': ['calendar-day-portrait', 'Today'], 'portrait-t': ['tasks-portrait', 'Tasks'],
+  };
+  let wtheme = 'light';
+  function paintWidgets() {
+    document.querySelectorAll('.size-stage img[data-w]').forEach(img => {
+      const [name, label] = wmap[img.dataset.w];
+      img.src = `assets/widgets/${name}${wtheme === 'dark' ? '-dark' : ''}.png`; img.alt = `${label} widget`; img.loading = 'lazy';
+    });
+  }
+  paintWidgets();
+  document.querySelectorAll('#sizes > button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#sizes > button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.size-stage').forEach(s => s.classList.toggle('on', s.dataset.size === b.dataset.size));
+  });
+  document.querySelectorAll('#widgetTheme button').forEach(b => b.onclick = () => {
+    wtheme = b.dataset.theme; document.querySelectorAll('#widgetTheme button').forEach(x => x.classList.toggle('on', x === b)); paintWidgets();
+  });
+  const clock = document.getElementById('clock');
+  const tick = () => clock.textContent = new Date().toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  tick(); setInterval(tick, 30000);
+
+  // Terminal
+  const term = document.getElementById('termText');
+  const lines = [
+    ['p', '~ % ', 'curl -fsSL https://kaizarraja.github.io/glance/install.sh | bash'],
+    ['o', '', '› Downloading Glance…'],
+    ['o', '', '› Installing to /Applications'],
+    ['o', '', '› Opening Glance'],
+    ['ok', '', '✓ Glance is ready. Sign in with Google to begin.'],
+  ];
+  let started = false;
+  async function runTerm() {
+    if (started) return; started = true;
+    while (true) {
+      term.innerHTML = '';
+      for (const [cls, prompt, text] of lines) {
+        const row = document.createElement('div'); term.appendChild(row);
+        if (prompt) {
+          row.innerHTML = `<span class="p">${prompt}</span><span class="cmd"></span>`;
+          const c = row.querySelector('.cmd');
+          for (let i = 0; i <= text.length; i++) { c.textContent = text.slice(0, i); await wait(reduce ? 0 : 28); }
+          await wait(500);
+        } else { row.className = cls; row.textContent = text; await wait(reduce ? 0 : 650); }
+      }
+      if (reduce) return;
+      await wait(5000);
+    }
+  }
+  new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { runTerm(); o.disconnect(); } }, { threshold: .3 }).observe(term);
+  document.getElementById('copyBtn').onclick = async e => {
+    try { await navigator.clipboard.writeText(document.getElementById('cmd').textContent); e.target.textContent = 'Copied ✓'; }
+    catch { e.target.textContent = 'Select & copy'; }
+    setTimeout(() => e.target.textContent = 'Copy', 2000);
+  };
+})();
+</script>
+</body>
+</html>
