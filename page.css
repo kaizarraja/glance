@@ -1,0 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono&display=swap");
+:root { --bg:#0a0a0b; --surface:#131316; --text:#f4f4f2; --muted:#b6b6bd; --dim:#8b8b93; --line:#222227; --blue:#60a5fa; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin:0; background: radial-gradient(60% 35% at 50% 0%, rgba(59,130,246,.11), transparent 70%), var(--bg); color: var(--text); font: 17px/1.75 Satoshi, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); text-underline-offset: 3px; }
+header { border-bottom:1px solid var(--line); }
+header .in, main { width:min(700px, calc(100% - 40px)); margin:0 auto; }
+header .in { display:flex; align-items:center; gap:10px; height:68px; }
+header img { width:30px; height:30px; border-radius:8px; }
+header a { color:inherit; text-decoration:none; display:flex; align-items:center; gap:10px; font: 600 20px "Clash Display", sans-serif; }
+main { padding: 80px 0 112px; }
+h1 { font: 600 clamp(38px, 7vw, 56px)/1.05 "Clash Display", sans-serif; letter-spacing:-.03em; margin:0 0 14px; }
+h2 { font: 600 24px/1.25 "Clash Display", sans-serif; letter-spacing:-.01em; margin: 56px 0 12px; padding-top: 32px; border-top: 1px solid var(--line); }
+.meta { color: var(--dim); font: 13px "Geist Mono", monospace; margin-bottom: 40px; }
+p, li { color: #d2d2d5; }
+p { margin: 0 0 16px; }
+ul { padding-left: 22px; }
+li { margin: 10px 0; }
+b { color: var(--text); }
+.box { border:1px solid var(--line); border-radius:18px; padding: 24px 28px; background: var(--surface); color: #d2d2d5; }
+code { font: 14px "Geist Mono", Menlo, monospace; background: var(--surface); border: 1px solid var(--line); padding: 1px 6px; border-radius: 6px; word-break: break-word; }
+footer { color: var(--dim); font-size:15px; border-top:1px solid var(--line); padding: 36px 20px; text-align:center; }
